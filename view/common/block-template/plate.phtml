@@ -1,0 +1,42 @@
+<?php
+/**
+ * `itemWithMetadata` as a full plate — one object, large, with its caption.
+ *
+ * Reproduces the markup of the design system's umd-libraries-image component
+ * so the CSS in asset/css/components.css applies. That CSS supplies the
+ * aspect-ratio variants (freeform, one_to_one, four_to_three) and the caption
+ * treatment; nothing here restates them.
+ *
+ * freeform is the default and the right one for archival material: a flier is
+ * whatever shape it is, and cropping a scan to a ratio loses the object.
+ *
+ * @var \Omeka\Api\Representation\SitePageBlockRepresentation[] $attachments
+ */
+$escape = $this->plugin('escapeHtml');
+$options = [];
+if ($this->siteSetting('exclude_resources_not_in_site')) {
+    $options['siteId'] = $this->currentSite()->id();
+}
+?>
+<?php foreach ($attachments as $attachment):
+    $item = $attachment->item();
+    if (empty($item)) {
+        continue;
+    }
+    $media = $item->primaryMedia();
+    if (!$media) {
+        continue;
+    }
+    $src = $media->thumbnailUrl('large');
+    $title = $item->displayTitle();
+?>
+<figure class="umd-lib image landscape s-margin-general-medium">
+    <a href="<?php echo $escape($item->siteUrl()); ?>">
+        <img class="image--image freeform" loading="lazy"
+             src="<?php echo $escape($src); ?>" alt="">
+    </a>
+    <figcaption class="image--caption s-box-medium-h t-body-small t-italic wysiwg-editor">
+        <?php echo $escape($title); ?>
+    </figcaption>
+</figure>
+<?php endforeach; ?>

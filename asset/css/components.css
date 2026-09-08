@@ -1,0 +1,427 @@
+/*
+ * UMD Libraries design system components -- GENERATED FILE, DO NOT EDIT.
+ *
+ * Component stylesheets from umd-lib/umdlib-design-system-theme at ref 4.0.1.
+ * Rebuild with `task css`. See build/fetch-design-system.py for why the CSS
+ * travels when the Twig does not, and for the rule about adding to this list.
+ *
+ * The markup these rules expect is reproduced in view/common/block-template/
+ * and view/layout/. If a class here matches nothing in those files, either the
+ * template drifted or the component should come out of COMPONENTS.
+ */
+
+/* ---- umd-libraries-umdheader -- override rules for the required university banner ---- */
+.umdheader-main__container {
+  max-width: 1440px !important;
+}
+
+.umdheader-nav__link.umdheader-nav__link--button {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* ---- umd-libraries-alert -- content notice ---- */
+.alert--site_wide {
+  background-color: var(--maryland-yellow);
+
+  border-left: 0.5rem solid var(--maryland-red);
+}
+
+.alert--site_wide .alert--title {
+  padding-right: 1.5rem;
+}
+
+.alert--in_page .alert--content {
+  border: 0.25rem solid var(--maryland-yellow);
+}
+
+.alert--site_wide .alert--content > div:last-of-type h2,
+.alert--site_wide .alert--content > div:last-of-type p {
+  margin-bottom: 0;
+}
+
+.alert--content {
+  position: relative;
+}
+
+.alert--button-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.alert--button-close button {
+  width: 25px;
+  height: 25px;
+}
+
+.alert--button-close svg {
+  height: 1.5rem;
+}
+
+/* specific customizations for site-wide alerts with an image, and different style */
+.alert--content-with-image {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.alert--content-text {
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.alert--image {
+  flex-shrink: 0;
+  max-width: 100%;
+  aspect-ratio: 3 / 2;
+  align-self: flex-start;
+  overflow: hidden;
+}
+
+.alert--image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.alert--site_wide.information {
+  background-color: var(--lightest-gray);
+}
+
+@media (min-width: 768px) {
+  .alert--content-with-image {
+    flex-direction: row;
+    gap: var(--space-md);
+  }
+
+  .alert--image {
+    max-width: 300px;
+  }
+}
+
+/* ---- umd-libraries-text-callout -- callout ---- */
+.text-callout--feature {
+  border-left: 4px solid var(--maryland-red);
+}
+
+.text-callout--text > *:last-child {
+  margin-bottom: 0rem !important;
+}
+
+/* ---- umd-libraries-image -- captioned plate ---- */
+.umd-lib.image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.umd-lib.image .image--image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+}
+
+.umd-lib.image .image--image.freeform {
+  aspect-ratio: auto;
+}
+
+.umd-lib.image .image--image.one_to_one {
+  aspect-ratio: 1 / 1;
+}
+
+.umd-lib.image.landscape .image--image.four_to_three {
+  aspect-ratio: 4 / 3;
+}
+
+.umd-lib.image.landscape .image--image.three_to_two {
+  aspect-ratio: 3 / 2;
+}
+
+.umd-lib.image.landscape .image--image.sixteen_to_nine {
+  aspect-ratio: 16 / 9;
+}
+
+.umd-lib.image.portrait .image--image.four_to_three {
+  aspect-ratio: 3 / 4;
+}
+
+.umd-lib.image.portrait .image--image.three_to_two {
+  aspect-ratio: 2 / 3;
+}
+
+.umd-lib.image.portrait .image--image.sixteen_to_nine {
+  aspect-ratio: 9 / 16;
+}
+
+.umd-lib.image .image--caption {
+  text-align: center;
+}
+
+.umd-lib.image .image--caption > *:first-child {
+  padding-top: var(--space-xs);
+}
+
+/* support for the image in the wysiwyg editor to respect the actuall image size */
+.wysiwyg-editor .umd-lib.image {
+  display: table;
+  width: auto; /* shrinks to fit content */
+  max-width: 100%; /* never exceeds container */
+  height: auto;
+}
+
+.wysiwyg-editor .umd-lib.image .image--image {
+  width: auto; /* respects natural image width */
+  max-width: 100%; /* caps at container width */
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+}
+
+.wysiwyg-editor .umd-lib.image .image--caption {
+  width: 0;
+  min-width: 100%;
+  overflow-wrap: break-word;
+}
+
+/* tablet */
+@media (min-width: 768px) {
+  .umd-lib.image .image--caption > *:first-child {
+    padding-top: var(--space-sm);
+  }
+}
+
+/* ---- umd-libraries-card -- gallery cell ---- */
+/* set the whole card as a link */
+.umd-lib.card {
+  height: 100%;
+  position: relative;
+}
+
+.umd-lib.card .card--content .card--title .card--link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.card--image img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+}
+
+.card--content {
+  height: auto;
+
+  flex-grow: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.card--eyebrow {
+  margin-bottom: var(--space-xs);
+}
+
+.card--headline a span {
+  display: inline-block;
+  min-width: 1rem;
+  max-width: 1rem;
+  background-position-y: -3px;
+  background-position-x: -3px;
+}
+
+.card--details {
+  margin-bottom: auto;
+}
+
+.card--text p {
+  font-size: 1rem;
+  line-height: 1.375rem;
+}
+
+/* icon card */
+.card--content-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card--content-text {
+  flex-grow: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  .card--details {
+    margin-bottom: 0rem;
+  }
+}
+
+.card--icon-lucide {
+  height: 4rem;
+  width: 4rem;
+}
+
+.card--icon .card--content {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.card--icon .card--content .card--text {
+  margin-bottom: 0 !important;
+}
+
+.card--icon .card--content .card--text p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  align-self: stretch;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .umd-lib.card {
+    max-width: 45rem;
+  }
+
+  /* support for the news section on the homepage */
+  .homepage-news .umd-lib.card--standard:first-child {
+    position: relative;
+  }
+
+  .homepage-news .umd-lib.card--standard:first-child .card--content {
+    padding: 1.5rem;
+    position: absolute;
+    bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(0, 0, 0, 0.5) 44%,
+      rgba(0, 0, 0, 0.75) 61%,
+      rgba(0, 0, 0, 1) 100% /* image scrim — theme-independent, intentionally not tokenized */
+    );
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .homepage-news
+    .umd-lib.card--standard:first-child
+    .card--content
+    .card--eyebrow,
+  .homepage-news .umd-lib.card--standard:first-child .card--content .card--link,
+  .homepage-news .umd-lib.card--standard:first-child .card--content .card--text,
+  .homepage-news
+    .umd-lib.card--standard:first-child
+    .card--content
+    .card--date {
+    color: var(--white);
+  }
+
+  .homepage-news
+    .umd-lib.card--standard:first-child
+    .card--content
+    .card--link {
+    background-image: linear-gradient(var(--white), var(--white));
+  }
+
+  .homepage-news
+    .umd-lib.card--standard:first-child
+    .card--content
+    .card--details {
+    margin: 0;
+  }
+
+  .homepage-news .umd-lib.card--standard:first-child .card--image {
+    position: absolute;
+    bottom: 0;
+    top: 0;
+  }
+}
+
+/* ---- umd-libraries-quote -- pull quote ---- */
+.quote--feature {
+  display: flex;
+  flex-direction: row;
+
+  position: relative;
+  overflow: hidden;
+}
+
+.quote--icon {
+  margin-right: 1rem;
+
+  width: 1.5rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+
+  z-index: 2;
+}
+
+.quote--content {
+  z-index: 2;
+}
+
+.quote--text {
+  padding-left: 1rem;
+  border-left: 2px solid var(--maryland-red);
+}
+
+.quote--text:last-child {
+  margin-bottom: 0rem !important;
+}
+
+.quote--text p {
+  color: var(--black);
+
+  font-family: Interstate;
+  font-size: 1.125rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.40625rem; /* 125% */
+}
+
+.quote--author {
+  display: flex;
+  flex-direction: column;
+  margin-left: 18px;
+}
+
+.quote--background-1,
+.quote--background-2 {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .quote--icon {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .quote--text p {
+    font-size: 1.5rem;
+    line-height: 1.875rem; /* 125% */
+  }
+}

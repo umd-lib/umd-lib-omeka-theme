@@ -1,0 +1,82 @@
+<?php
+/**
+ * Exhibit section navigation.
+ *
+ * Walks the site's public nav container and renders an accessible top bar with
+ * click-toggle disclosure submenus to depth 2. Renders nothing when the site
+ * has no navigation, preserving the "no empty band" behaviour the layout used
+ * to own. Submenus render expanded and in-flow; the theme.css `.umd-js` rules
+ * collapse them only once JS is confirmed, so without JS every link stays
+ * reachable.
+ *
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var int $navDepth  0 = unlimited (from the nav_depth theme setting)
+ */
+$escape     = $this->plugin('escapeHtml');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
+$translate  = $this->plugin('translate');
+
+$container = $site->publicNav()->getContainer();
+
+// Depth 2 is the deepest any UMD exhibit nests; honour a smaller nav_depth.
+$maxDepth = ($navDepth && $navDepth < 2) ? $navDepth : 2;
+
+$counter = 0;
+
+$renderItems = function ($pages, $depth) use (&$renderItems, &$counter, $escape, $escapeAttr, $translate, $maxDepth) {
+    $items = '';
+    foreach ($pages as $page) {
+        if (!$page->isVisible()) {
+            continue;
+        }
+        $label    = (string) $page->getLabel();
+        $href     = $page->getHref();
+        $current  = $page->isActive(false);
+        $inTrail  = $page->isActive(true);
+        $children = ($depth + 1 < $maxDepth && $page->hasPages())
+            ? $renderItems($page->getPages(), $depth + 1)
+            : '';
+
+        if ($depth === 0 && $children !== '') {
+            $submenuId = 'section-nav-submenu-' . (++$counter);
+            $itemClass = 'section-nav__item section-nav__item--parent' . ($inTrail ? ' section-nav__item--in-trail' : '');
+            $items .= '<li class="' . $itemClass . '">'
+                . '<a class="section-nav__link c-content-primary" href="' . $escapeAttr($href) . '"'
+                . ($current ? ' aria-current="page"' : '') . '>' . $escape($label) . '</a>'
+                . '<button type="button" class="section-nav__disclosure" aria-expanded="' . ($inTrail ? 'true' : 'false') . '"'
+                . ' aria-controls="' . $submenuId . '"'
+                . ' aria-label="' . $escapeAttr(sprintf($translate('%s submenu'), $label)) . '">'
+                . '<span class="i-chevron-down" aria-hidden="true"></span>'
+                . '</button>'
+                . '<ul id="' . $submenuId . '" class="section-nav__submenu">' . $children . '</ul>'
+                . '</li>';
+        } else {
+            $liClass = $depth === 0 ? 'section-nav__item' : 'section-nav__subitem';
+            $aClass  = $depth === 0 ? 'section-nav__link' : 'section-nav__sublink';
+            $items .= '<li class="' . $liClass . '">'
+                . '<a class="' . $aClass . ' c-content-primary" href="' . $escapeAttr($href) . '"'
+                . ($current ? ' aria-current="page"' : '') . '>' . $escape($label) . '</a>'
+                . '</li>';
+        }
+    }
+    return $items;
+};
+
+$listItems = $renderItems($container, 0);
+
+if (trim($listItems) === '') {
+    return;
+}
+?>
+<nav class="section-nav t-interactive" aria-label="<?php echo $escapeAttr($translate('Exhibit')); ?>">
+    <div class="section-nav__inner">
+        <button type="button" class="section-nav__toggle c-content-primary" aria-expanded="false" aria-controls="section-nav-menu">
+            <span class="i-menu-toggle" aria-hidden="true"></span>
+            <span class="section-nav__toggle-label"><?php echo $escape($translate('Menu')); ?></span>
+        </button>
+        <ul id="section-nav-menu" class="section-nav__list">
+            <?php echo $listItems; ?>
+        </ul>
+    </div>
+</nav>

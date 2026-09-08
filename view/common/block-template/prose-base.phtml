@@ -1,0 +1,76 @@
+<?php
+/**
+ * Shared logic for every `html` block variant.
+ *
+ * The callout and content-notice variants reproduce the markup of the design
+ * system's own components — umd-libraries-text-callout and
+ * umd-libraries-alert — so that the CSS fetched into asset/css/components.css
+ * applies to them directly. We cannot use the components themselves: they are
+ * Twig and need Drupal. The markup is two or three nested divs, so copying the
+ * shape is cheap and it keeps the exhibit visually identical to lib.umd.edu by
+ * construction rather than by eye.
+ *
+ * If you change a class name here, check it still matches components.css.
+ *
+ * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
+ * @var string $variant  essay | callout | content-notice | pull-quote
+ */
+$variant = isset($variant) ? $variant : 'essay';
+$html = $block->dataValue('html', '');
+if (trim($html) === '') {
+    return;
+}
+$escape = $this->plugin('escapeHtml');
+?>
+<?php if ($variant === 'content-notice'):
+    // umd-libraries-alert, in_page variant. aria-labelledby points at the
+    // heading rather than duplicating it in an aria-label.
+    $alertId = 'alert-' . substr(md5($block->id() . 'notice'), 0, 8);
+?>
+<div role="note" class="umd-lib alert alert--in_page"
+     aria-labelledby="<?php echo $escape($alertId); ?>-title"
+     id="<?php echo $escape($alertId); ?>">
+    <div class="alert--container s-margin-general-medium">
+        <div class="alert--content s-box-medium-v s-box-medium-h">
+            <div class="alert--title">
+                <h2 id="<?php echo $escape($alertId); ?>-title" class="t-title-small c-content-primary s-stack-small">
+                    <?php echo $this->translate('A note on this content'); ?>
+                </h2>
+            </div>
+            <div class="alert--description wysiwyg-editor">
+                <?php echo $html; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php elseif ($variant === 'callout'):
+    // umd-libraries-text-callout. Its own CSS supplies the red left border.
+?>
+<div class="umd-lib text-callout--feature c-bg-secondary s-box-medium-v s-box-medium-h s-margin-general-medium"
+     role="note" aria-label="<?php echo $escape($this->translate('Callout')); ?>">
+    <div class="text-callout--text wysiwyg-editor">
+        <?php echo $html; ?>
+    </div>
+</div>
+
+<?php elseif ($variant === 'pull-quote'):
+    // umd-libraries-quote, light + simple variant. A <blockquote> for
+    // quoted-content semantics; the component's generic role="region"
+    // "quote" landmark is intentionally dropped (landmark noise). The UA
+    // blockquote margins are neutralised by the global reset in theme.css.
+?>
+<blockquote class="umd-lib quote--feature c-bg-secondary s-box-large-v s-box-large-h s-margin-general-medium">
+    <div class="quote--icon i-quote" aria-hidden="true"></div>
+    <div class="quote--content">
+        <div class="quote--text t-title-medium s-stack-small">
+            <?php echo $html; ?>
+        </div>
+    </div>
+</blockquote>
+
+<?php else: ?>
+<div class="umd-prose umd-prose--<?php echo $this->escapeHtmlAttr($variant); ?>">
+    <?php echo $html; ?>
+</div>
+<?php endif; ?>

@@ -1,0 +1,32 @@
+<?php
+/**
+ * `pageTitle` as the exhibit hero.
+ *
+ * Reads three theme settings declared in config/theme.ini, so the same
+ * template produces a different hero per exhibit with no code change.
+ *
+ * @var string $pageTitle
+ */
+$escape    = $this->plugin('escapeHtml');
+$image     = $this->themeSettingAssetUrl('hero_image');
+$treatment = $this->themeSetting('hero_treatment') ?: 'band';
+
+// Band and stacked both position the title against an image. With no hero
+// image set they paint a bare coloured slab over nothing, which is what a
+// site looks like before anyone has configured it — so fall back to plain.
+if (!$image) {
+    $treatment = 'plain';
+}
+$height    = $this->themeSetting('hero_height');
+
+$attrs = '';
+if ($height && $treatment !== 'plain') {
+    $attrs = ' style="--umd-hero-height:' . $this->escapeHtmlAttr($height) . '"';
+}
+?>
+<header class="umd-hero umd-hero--<?php echo $escape($treatment); ?>"<?php echo $attrs; ?>>
+<?php if ($image && $treatment !== 'plain'): ?>
+    <div class="umd-hero__media"><img src="<?php echo $this->escapeHtmlAttr($image); ?>" alt=""></div>
+<?php endif; ?>
+    <h1 class="umd-hero__title"><?php echo $escape($pageTitle); ?></h1>
+</header>

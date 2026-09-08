@@ -1,0 +1,75 @@
+<?php
+/**
+ * Site footer: an always-present legal/utility strip (Title II compliance) and
+ * a structured About block driven by theme settings.
+ *
+ * Fixed dark surface, so the CSS uses literal colours, not tokens. Unit links
+ * are derived from the holding_unit setting via a single lookup below rather
+ * than hand-typed per exhibit; only mspal is verified. There is deliberately no
+ * hosted footer bundle and no reproduction of umd-libraries-footer — see the
+ * spec.
+ */
+$escape    = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+
+$about   = (string) $this->themeSetting('about_html');
+$find_us   = (string) $this->themeSetting('find_us_html');
+$credit  = (string) $this->themeSetting('credit_line');
+$unitKey = $this->themeSetting('holding_unit');
+
+// Single source of truth for institutional links, keyed by holding_unit. Only
+// mspal is verified (from the live legacy exhibit). scua/other are absent on
+// purpose — no guessed URLs — so they render no unit block until supplied.
+$units = [
+    'mspal' => [
+        'name'     => 'Michelle Smith Performing Arts Library',
+        'holdings' => 'https://www.lib.umd.edu/collections/special/performing-arts/holdings/collection-holdings-scpa',
+        'contact'  => 'https://www.lib.umd.edu/collections/special/contact',
+        'social'   => 'https://www.lib.umd.edu/social-media#mspal',
+    ],
+];
+$unit = $units[$unitKey] ?? null;
+
+$hasAbout = trim($about) !== '' || trim($credit) !== '' || $unit;
+?>
+
+<footer class="umd-footer">
+    <?php if ($hasAbout): ?>
+        <div class="umd-footer__content">
+            <div class="umd-footer__section">
+                <h2 class="umd-footer__heading"><?php echo $escape($translate('About')); ?></h2>
+
+                <?php if (trim($about) !== ''): ?>
+                    <div class="umd-footer__prose"><?php echo $about; ?></div>
+                <?php endif; ?>
+
+                <?php if (trim($credit) !== ''): ?>
+                    <div class="umd-footer__credit"><?php echo $credit; ?></div>
+                <?php endif; ?>
+            </div>
+
+            <div class="umd-footer__section">
+                <h2 class="umd-footer__heading"><?php echo $escape($translate('Find Us')); ?></h2>
+
+                <?php if (trim($find_us) !== ''): ?>
+                    <div class="umd-footer__prose"><?php echo $find_us; ?></div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <?php if ($unit): ?>
+            <ul class="umd-footer__unit">
+                <li><a href="<?php echo $escape($unit['holdings']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($unit['name']); ?></a></li>
+                <li><a href="<?php echo $escape($unit['contact']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('Contact us')); ?></a></li>
+                <li><a href="<?php echo $escape($unit['social']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('Social media')); ?></a></li>
+            </ul>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <nav class="umd-footer__legal" aria-label="<?php echo $escape($translate('Footer')); ?>">
+        <a href="https://giving.umd.edu/giving/showSchool.php?name=libraries" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('Give Now')); ?></a>
+        <a href="https://www.lib.umd.edu/about/policies/privacy" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('Privacy Policy')); ?></a>
+        <a href="https://www.umd.edu/web-accessibility" target="_blank" rel="noopener noreferrer"><?php echo $escape($translate('Web Accessibility')); ?></a>
+        <span class="umd-footer__copyright">&copy; <?php echo date('Y'); ?> <?php echo $escape($translate('University of Maryland')); ?></span>
+    </nav>
+</footer>

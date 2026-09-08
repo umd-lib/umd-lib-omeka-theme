@@ -1,0 +1,788 @@
+/*
+ * UMD Libraries Exhibits -- local delta.
+ *
+ * The analogue of umd-lib-opendata's assets/css/custom.css: everything here
+ * maps Omeka S's own markup onto the design system's token vocabulary. Loaded
+ * after design-system.css (see view/layout/layout.phtml), so these rules win.
+ *
+ * Values come from umdlib_umdds tokens, fetched into design-system.css by
+ * build/fetch-design-system.py, rather than being hand-picked -- so they track
+ * the Libraries Drupal theme instead of drifting from it.
+ *
+ *
+ * WHY THERE IS A BASE LAYER HERE AT ALL
+ *
+ * We skip the design system's css/base.css (two resets in one cascade -- see
+ * build/fetch-design-system.py). What remains is tokens plus CLASS-BASED
+ * utilities: .t-body-medium, .c-content-primary, .s-stack-medium and so on.
+ * Omeka emits bare <h2>, <p>, <ul> with no such classes, so without the
+ * element rules below the site renders as unstyled HTML -- confirmed by
+ * running it.
+ *
+ * opendata never needed this because Hextra brings its own typography layer.
+ * We have no host theme, so the base layer is ours to write. It deliberately
+ * mirrors the utility definitions rather than inventing a second scale:
+ * body text matches .t-body-medium, h1 matches .t-headline, and so on.
+ *
+ *
+ * TOKEN INVERSION -- read before adding any rule.
+ *
+ * .dark-theme is a semantic inversion, not a palette swap. Verified in our own
+ * generated output, where --maryland-red is declared twice:
+ *
+ *     --white           #ffffff -> #000000
+ *     --black           #000000 -> #ffffff
+ *     --maryland-red    #e21833 -> #ffd200   (the brand yellow)
+ *     --maryland-yellow #ffd200 -> #e21833
+ *     the six grays reverse end to end
+ *
+ * So var(--white) is NOT "white". A surface that must keep a fixed appearance
+ * in both themes -- the red university strip, the dark footer -- has to use
+ * literal values, because a token would invert underneath its own text.
+ * Surfaces that should follow the theme use tokens and need no dark rule.
+ *
+ * Omeka S has no dark mode and nothing sets .dark-theme today. This matters
+ * the moment anyone adds a toggle, and rediscovering it costs a day.
+ */
+
+/* --------------------------------------------------------- accent sets -- */
+
+/*
+ * Three curated accent palettes, selected per exhibit by the `accent` theme
+ * setting, which renders as a dropdown -- deliberately NOT a colour picker.
+ * A free colour input guarantees off-brand, unaudited contrast pairs, and
+ * WCAG 2.1 AA is a per-tier prerequisite rather than a nice-to-have.
+ *
+ * Measured against --white:
+ *   --maryland-red #e21833   4.76:1   passes body AA, with little margin
+ *   --dark-red     #a90007   7.81:1
+ *   --darker-gray  #242424  15.52:1
+ *
+ * Red clearing 4.5:1 by 0.26 is why link text uses it at full weight and
+ * never at reduced opacity or on a tinted ground.
+ */
+:root {
+  --umd-accent: var(--maryland-red);
+  --umd-accent-ink: var(--white);
+  --umd-measure: 68ch;
+  --umd-page: 75rem;
+}
+[data-accent="ink"] {
+  --umd-accent: var(--darker-gray);
+}
+[data-accent="archival"] {
+  --umd-accent: var(--dark-red);
+}
+
+/* ------------------------------------------------------------ base type -- */
+
+/*
+ * Mirrors .t-body-medium. Set on body rather than applied as a class because
+ * Omeka's markup carries no design-system classes.
+ */
+body {
+  margin: 0;
+  /* Column layout so a short page does not leave the footer floating in the
+   * middle of the viewport. .umd-main takes the slack. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: Interstate, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.375rem;
+  color: var(--black);
+  background-color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Matching .t-headline / .t-title-large / .t-title-medium.
+ *
+ * Per-exhibit display type (Tier 1). `--exhibit-display-font` is the seam an
+ * exhibit overrides to give its headings a distinct face; unset, it falls back
+ * to the design-system stack, so the default is a no-op. An exhibit sets it in
+ * its own scoped layer, e.g.
+ *   [data-exhibit="dc-punk"] { --exhibit-display-font: "Crimson Text", Georgia, serif; }
+ * Body text is deliberately NOT routed through it — readability stays on the DS
+ * font regardless of an exhibit's display choice. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--exhibit-display-font, Interstate, system-ui, sans-serif);
+  font-weight: 700;
+  color: var(--black);
+  text-wrap: balance;
+  margin: 0 0 var(--space-sm);
+}
+h1 { font-size: 2rem;    line-height: 2.08rem; }
+h2 { font-size: 1.5rem;  line-height: 1.6875rem; }
+h3 { font-size: 1.25rem; line-height: 1.5rem; }
+h4, h5, h6 { font-size: 1rem; line-height: 1.375rem; }
+
+p, ul, ol, dl, blockquote, figure, table {
+  margin: 0 0 var(--space-md);
+}
+
+a {
+  color: var(--umd-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 3px solid var(--umd-accent);
+  outline-offset: 2px;
+}
+
+img { max-width: 100%; height: auto; }
+
+/* Wide content scrolls inside its own container; the page body never does. */
+table { width: 100%; border-collapse: collapse; }
+.table-wrap, .umd-main table { display: block; overflow-x: auto; }
+
+/* ---------------------------------------------------------- page shell -- */
+
+.umd-main {
+  display: block;
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: var(--umd-page);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+}
+
+/* Running prose is capped by measure, not by container. Long-form essays are
+ * the most common exhibit element and an unbounded line length is the fastest
+ * way to make one unreadable. */
+.umd-main > p,
+.umd-prose {
+  max-width: var(--umd-measure);
+}
+
+/* ------------------------------------------------------------- skip link -- */
+
+.umd-skip {
+  position: absolute;
+  left: -9999px;
+}
+.umd-skip:focus {
+  left: 0;
+  top: 0;
+  z-index: 100;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--umd-accent);
+  color: var(--umd-accent-ink);
+}
+
+/* -------------------------------------------------- required university banner -- */
+
+/*
+ * Nothing here. The red "University of Maryland" strip is the university's own
+ * component, embedded as a script in view/layout/layout.phtml and styled by the
+ * bundle it loads. The two override rules the design system applies to it come
+ * from components.css.
+ *
+ * An earlier draft hand-rolled this strip in ~40 lines of CSS. That is why the
+ * header diverged from lib.umd.edu: it was an eyeball copy of something
+ * centrally maintained and centrally updated.
+ */
+
+/* ----------------------------------------------------------------- header -- */
+
+/*
+ * Token-driven surface, so it inverts with .dark-theme and needs no dark rule.
+ */
+.umd-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--light-gray);
+}
+.umd-header__inner {
+  max-width: var(--umd-page);
+  margin: 0 auto;
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: 4rem;
+  flex-wrap: wrap;
+}
+
+/* The logo is the row's flexible item: it shrinks so controls never get pushed
+ * past the viewport edge. Size comes from the img's width/height attributes. */
+.umd-header__logo { display: block; flex: 0 1 auto; min-width: 0; }
+.umd-header__logo img { display: block; height: auto; max-width: 100%; }
+
+/*
+ * Logo swap. The header surface is var(--white), which .dark-theme inverts to
+ * #000000, so the default dark wordmark would disappear.
+ *
+ * Both selectors are qualified by the parent class deliberately: a bare
+ * .umd-header__logo-dark is (0,1,0) and loses to `.umd-header__logo img` at
+ * (0,1,1) above, which renders BOTH logos stacked.
+ */
+.umd-header__logo .umd-header__logo-dark { display: none; }
+.dark-theme .umd-header__logo .umd-header__logo-light { display: none; }
+.dark-theme .umd-header__logo .umd-header__logo-dark { display: block; }
+
+/* The exhibit's own name, sitting beside the institutional wordmark. Mirrors
+ * .t-title-large rather than .t-display: this is a sub-brand, not a hero. */
+.umd-header__exhibit {
+  margin: 0;
+  padding-inline-start: var(--space-md);
+  border-inline-start: 1px solid var(--light-gray);
+}
+.umd-header__exhibit a {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.6875rem;
+  color: var(--black);
+  text-decoration: none;
+}
+.umd-header__exhibit a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .umd-header__exhibit {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    flex-basis: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ nav -- */
+
+/*
+ * .t-interactive supplies the type; layout, disclosure state, and the dropdown
+ * live here. Progressive enhancement is gated on the `umd-js` class a
+ * synchronous head script sets on <html> before first paint: WITHOUT it every
+ * link renders expanded and in-flow (the no-JS fallback — reachable at every
+ * width, no overlap, no flash); WITH it, submenus collapse to disclosures and
+ * the mobile bar collapses behind a toggle. Open state is the disclosure
+ * button's aria-expanded, which the JS flips — so visibility needs no separate
+ * [hidden] toggle. */
+.section-nav {
+  position: relative;
+  background: var(--white);
+  border-bottom: 1px solid var(--light-gray);
+}
+.section-nav__inner {
+  max-width: var(--umd-page);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+.section-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.section-nav__item {
+  position: relative;
+}
+.section-nav__link,
+.section-nav__sublink {
+  display: inline-block;
+  padding: var(--space-xs) 0;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  vertical-align: middle;
+}
+.section-nav__link:hover,
+.section-nav__sublink:hover,
+.section-nav__item--in-trail > .section-nav__link,
+.section-nav [aria-current="page"] {
+  border-bottom-color: var(--umd-accent);
+}
+
+/* Disclosure button, inline after the parent link. The chevron glyph is the DS
+   .i-chevron-down icon utility; only its open-state rotation lives here. */
+.section-nav__disclosure {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.section-nav__disclosure .i-chevron-down {
+  transition: transform 120ms ease;
+}
+.section-nav__disclosure[aria-expanded="true"] .i-chevron-down {
+  transform: rotate(180deg);
+}
+
+/* Submenu: in-flow and visible by default — this IS the no-JS fallback. */
+.section-nav__submenu {
+  margin: 0;
+  padding: var(--space-sm);
+  list-style: none;
+}
+
+/* The toggle is useless without JS, so it stays hidden until JS shows it. */
+.section-nav__toggle {
+  display: none;
+}
+
+/* -- progressive enhancement: everything below applies only when JS ran -- */
+
+/* Collapse submenus to their disclosure. The active-trail parent ships
+   aria-expanded="true", so its submenu is open from first paint (no flash);
+   the JS flips aria-expanded on click. */
+.umd-js .section-nav__submenu {
+  display: none;
+}
+.umd-js .section-nav__disclosure[aria-expanded="true"] + .section-nav__submenu {
+  display: block;
+}
+
+@media (min-width: 48rem) {
+  /* Desktop with JS: the open submenu is an anchored dropdown under its parent. */
+  .umd-js .section-nav__disclosure[aria-expanded="true"] + .section-nav__submenu {
+    position: absolute;
+    top: 100%;
+    inset-inline-start: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    min-width: 12rem;
+    background: var(--white);
+    border: 1px solid var(--light-gray);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  /* Mobile with JS: the bar collapses behind the toggle; open submenus stack. */
+  .umd-js .section-nav__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+  }
+  .umd-js .section-nav__list {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  .umd-js .section-nav--open .section-nav__list {
+    display: flex;
+  }
+  .section-nav__submenu {
+    padding-inline-start: var(--space-md);
+  }
+}
+
+/* --------------------------------------------------------------- footer -- */
+
+/* Fixed dark surface in both themes, so literal values. */
+.umd-footer {
+  margin-top: var(--space-2xl);
+  padding: var(--space-xl) var(--space-md);
+  background: #242424;
+  color: #ffffff;
+}
+.umd-footer__content,
+.umd-footer__legal {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid #454545;
+  display: flex;
+  gap: var(--space-md);
+  align-items: baseline;
+  font-size: 0.875rem;
+  justify-content: center;
+  max-width: var(--umd-page);
+  margin-inline: auto;
+}
+.umd-footer__content > .umd-footer__section:nth-child(1) {
+  flex: 0 0 66.666%;
+}
+.umd-footer__content > .umd-footer__section:nth-child(2) {
+  flex: 0 0 33.333%;
+}
+/* Literal white: the global `h1..h6 { color: var(--black) }` rule would
+ * otherwise paint the heading near-black on this fixed-dark surface (which is
+ * not .dark-theme, so --black does not invert). */
+.umd-footer__heading { font-size: 1.25rem; margin: 0 0 var(--space-xs); color: #ffffff; }
+.umd-footer__prose { font-size: 0.9375rem; line-height: 1.5; white-space: pre-line;}
+.umd-footer__credit { margin-top: var(--space-md); font-size: 0.875rem; color: #cccccc; }
+.umd-footer__unit {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: 0.9375rem;
+}
+.umd-footer__copyright { color: #cccccc; }
+.umd-footer a { color: #ffd200; }
+
+/* -------------------------------------------------------- lifecycle note -- */
+
+/*
+ * The standing notice for exhibits that are live but no longer maintained,
+ * driven by the `lifecycle_state` theme setting. Literal values: this band
+ * must read identically whatever the accent is, because its job is to be
+ * recognisable across every exhibit.
+ */
+.umd-lifecycle {
+  padding: var(--space-xs) var(--space-md);
+  border-bottom: 2px solid #8c6d1f;
+  background: #fdf6e3;
+  color: #1a1a1a;
+}
+.umd-lifecycle p { margin: 0; }
+.umd-lifecycle--sunsetting {
+  border-bottom-color: #8a1c1c;
+  background: #fbeaea;
+}
+
+/* ------------------------------------------------------------------ hero -- */
+
+.umd-hero { margin-bottom: var(--space-lg); }
+.umd-hero--band { position: relative; }
+.umd-hero__media img {
+  display: block;
+  width: 100%;
+  height: var(--umd-hero-height, 20rem);
+  object-fit: cover;
+}
+.umd-hero__title {
+  font-family: "Barlow Condensed", Interstate, sans-serif;
+  font-size: 3rem;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.06rem;
+}
+.umd-hero--band .umd-hero__title {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: rgb(0 0 0 / 0.62);
+  color: #ffffff;
+}
+
+/* ----------------------------------------------------------------- prose -- */
+
+.umd-prose--essay-lede > :first-child {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------- gallery -- */
+
+.umd-gallery__heading { margin-bottom: var(--space-md); }
+.umd-gallery__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.umd-gallery--grid .umd-gallery__list {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  /* Rows sized by the tallest cell in that row, so a long caption cannot
+   * shove its neighbours' thumbnails out of alignment. */
+  grid-auto-rows: min-content;
+  align-items: start;
+}
+.umd-gallery--list .umd-gallery__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Fixed-column gallery layouts, applied per-block via the page editor's class
+ * field (a block's Advanced settings). The class names and grid follow the DC
+ * Punk sandbox build, so an image block already carrying `two-col-gallery` or
+ * `four-col-gallery` transfers to this theme unchanged. These are layout
+ * utilities the editor applies, NOT block templates — the theme's template
+ * vocabulary deliberately stays at seven (see config/theme.ini). */
+.two-col-gallery,
+.four-col-gallery {
+  display: grid;
+  place-items: center;
+  gap: var(--space-md);
+}
+.two-col-gallery  { grid-template-columns: repeat(2, 1fr); }
+.four-col-gallery { grid-template-columns: repeat(4, 1fr); }
+.two-col-gallery img,
+.four-col-gallery img { width: 100%; height: auto; display: block; }
+/* Four columns is unreadable on a phone; halve it there. */
+@media (max-width: 47.99rem) {
+  .four-col-gallery { grid-template-columns: repeat(2, 1fr); }
+}
+/* The card component crops images to a uniform 3:2 tile (object-fit: cover);
+ * the Seventies fliers are portrait posters, so restore natural proportions
+ * inside the gallery. Scoped to .umd-gallery so a card used elsewhere (e.g. a
+ * landscape news-style strip) keeps the faithful tile. */
+.umd-gallery .card--image img { aspect-ratio: auto; height: auto; }
+
+/* The card title link: dark and undecorated, underline on hover — the retired
+ * .umd-gallery__link behaviour. color: inherit takes the card's
+ * c-content-primary, so it stays correct under .dark-theme's semantic
+ * inversion rather than the accent colour the global `a` rule would give. */
+.umd-gallery .card--headline a { color: inherit; text-decoration: none; }
+.umd-gallery .card--headline a:hover { text-decoration: underline; }
+
+/* Clamp carried over from the retired .umd-gallery__title. t-title-medium is
+ * larger than the old caption span, so without this a 43-word title (corpus
+ * max; median 7) sets its own cell height and the rows go ragged. The full
+ * text is one click away in the lightbox and always on the item page. Whether
+ * a 43-word a11y description belongs in dcterms:title is a migration decision,
+ * not this file's. */
+.umd-gallery .card--headline {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* Pull quote: the block HTML's last paragraph carries the global reset's
+ * var(--space-md) bottom margin, which stacks on the panel's s-box-large-v
+ * padding and makes the panel bottom-heavy. Zero it so the panel's internal
+ * padding reads symmetrically. Scoped to the quote so nothing else moves. */
+.quote--feature .quote--text > :last-child { margin-bottom: 0; }
+
+/* The flier wall is denser than a default grid on purpose: the fliers are the
+ * exhibit, and at DC Punk's volume a roomy grid buries them below the fold. */
+.umd-showcase--dense .umd-showcase__thumb {
+  display: grid;
+  gap: var(--space-xs);
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+}
+.umd-showcase__heading { margin-bottom: var(--space-xs); }
+
+/* -------------------------------------------------------------- lightbox -- */
+
+/*
+ * Overlay for the "Gallery with lightbox" template. Replaces fancybox, the
+ * most widely shared component across the legacy exhibits.
+ *
+ * Literal colours: the overlay is a fixed dark scrim in both themes, and a
+ * token would invert underneath its own white controls.
+ */
+.umd-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: rgb(0 0 0 / 0.88);
+}
+.umd-lightbox[hidden] { display: none; }
+
+.umd-lightbox__figure {
+  margin: 0;
+  max-width: min(90vw, 70rem);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.umd-lightbox__img {
+  display: block;
+  max-width: 100%;
+  max-height: 78vh;
+  margin: 0 auto;
+  object-fit: contain;
+  background: #111111;
+}
+.umd-lightbox__caption {
+  color: #ffffff;
+  font-size: 0.9375rem;
+  text-align: center;
+}
+.umd-lightbox__counter { color: #cfcfcf; }
+
+.umd-lightbox__close,
+.umd-lightbox__nav {
+  flex: none;
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 4px;
+}
+.umd-lightbox__close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  font-size: 2.25rem;
+  padding: 0.25rem 0.6rem;
+}
+.umd-lightbox__nav { font-size: 3rem; padding: 0 var(--space-sm); }
+.umd-lightbox__nav[hidden] { display: none; }
+.umd-lightbox__close:hover,
+.umd-lightbox__nav:hover { background: rgb(255 255 255 / 0.14); }
+
+/* The accent is unreadable on the scrim, so the focus ring is white here.
+ * A visible focus ring is not optional: the overlay traps focus, and a
+ * keyboard user who cannot see where they are has no way out but Escape. */
+.umd-lightbox :focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .umd-lightbox { padding: var(--space-sm); }
+  .umd-lightbox__nav { font-size: 2rem; padding: 0 0.25rem; }
+}
+
+/* ------------------------------------------------------- generated pages -- */
+
+/*
+ * Browse listings and item pages.
+ *
+ * THE GAP THIS FILLS. The seven named treatments cover pages a curator
+ * *authors*. Omeka also *generates* pages nobody builds — the browse listing
+ * behind every site's nav, and one page per item — and every exhibit gets them
+ * whether or not anyone thinks about them. Because the theme skips the design
+ * system's base.css and core's own theme CSS is not loaded, these arrived as
+ * bulleted lists of underlined red links.
+ *
+ * Styled here rather than by overriding view templates: core's markup is
+ * perfectly reasonable, and every override is a file to reconcile against
+ * every future Omeka release. Class names below are core's, read off the
+ * rendered output — .resource-list, .browse-controls, .property and friends.
+ */
+
+/* ---- browse listing ---- */
+
+.resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  grid-auto-rows: min-content;
+  align-items: start;
+}
+.resource-list .resource { margin: 0; }
+.resource-link {
+  display: block;
+  color: var(--black);
+  text-decoration: none;
+}
+.resource-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.resource-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  /* Same three-line clamp as the gallery, for the same reason: titles across
+   * the legacy corpus run 1 to 43 words and the theme controls neither. */
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  margin-top: var(--space-xs);
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+.resource-link:hover .resource-name { text-decoration: underline; }
+
+/* ---- browse controls ---- */
+
+.browse-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--light-gray);
+  font-size: 0.875rem;
+}
+.browse-controls .pagination,
+.browse-controls .sorting {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+}
+.browse-controls form { display: flex; align-items: center; gap: var(--space-xs); margin: 0; }
+.browse-controls input[type="text"],
+.browse-controls select {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--light-gray);
+  background: var(--white);
+  color: var(--black);
+  font: inherit;
+}
+.browse-controls .pagination-buttons { display: flex; gap: 0.25rem; }
+.browse-controls .button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.9rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--light-gray);
+  color: var(--umd-accent);
+  text-decoration: none;
+}
+/* Disabled pagination arrows are spans, not buttons — they must not read as
+ * available. Greyed and non-interactive rather than merely faded. */
+.browse-controls .button.inactive {
+  color: var(--medium-gray);
+  pointer-events: none;
+  opacity: 0.6;
+}
+.browse-controls .row-count { color: var(--dark-gray); }
+
+/* ---- item pages ---- */
+
+.media-embeds { margin-bottom: var(--space-lg); }
+.media-render img,
+.media-embeds img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/*
+ * Metadata. Core emits dl > div.property > dt + dd, which is the correct
+ * shape; it just has no styling here. Two columns on wide screens so labels
+ * and values scan, stacked below the design system's first breakpoint.
+ */
+.umd-main dl { margin: 0 0 var(--space-lg); }
+.umd-main dl .property {
+  display: grid;
+  gap: 0.15rem var(--space-md);
+  padding: var(--space-xs) 0;
+  border-top: 1px solid var(--line, var(--light-gray));
+}
+.umd-main dl .property dt {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dark-gray);
+}
+.umd-main dl .property dd { margin: 0; }
+.umd-main dl .property dd + dd { margin-top: 0.25rem; }
+
+@media (min-width: 768px) {
+  .umd-main dl .property {
+    grid-template-columns: 14rem 1fr;
+    align-items: baseline;
+  }
+}
+
+.umd-main dl.item-sets .property dt { color: var(--umd-accent); }

@@ -1,0 +1,91 @@
+<?php
+/**
+ * Shared logic for `browsePreview` gallery variants.
+ *
+ * Variable names match core's common/block-layout/browse-preview.phtml.
+ *
+ * @var array  $resources
+ * @var array  $components
+ * @var string $resourceType
+ * @var string $heading
+ * @var string $linkText
+ * @var array  $query
+ * @var string $layout     grid
+ * @var bool   $lightbox   enhance thumbnails into an overlay
+ */
+$escape   = $this->plugin('escapeHtml');
+$layout   = isset($layout) ? $layout : 'grid';
+$lightbox = !empty($lightbox);
+
+$showThumbnail = in_array('thumbnail', $components);
+$showHeading   = in_array('resource-heading', $components);
+$showBody      = in_array('resource-body', $components);
+
+if ($lightbox) {
+    // Progressive enhancement only. Without this script the markup below is
+    // still a grid of links to item pages.
+    $this->headScript()->appendFile($this->assetUrl('js/lightbox.js'));
+}
+?>
+<div class="umd-gallery umd-gallery--<?php echo $escape($layout); ?><?php echo $lightbox ? ' umd-gallery--lightbox' : ''; ?>"<?php echo $lightbox ? ' data-umd-lightbox' : ''; ?>>
+<?php if ($heading): ?>
+    <h2 class="umd-gallery__heading"><?php echo $escape($heading); ?></h2>
+<?php endif; ?>
+    <ul class="umd-gallery__list">
+<?php foreach ($resources as $resource):
+    $title = $resource->displayTitle();
+    $full  = null;
+    if ($lightbox && ($media = $resource->primaryMedia())) {
+        // large rather than the original: originals here are archival scans,
+        // and an overlay is not the place to ship a 40 MB TIFF derivative.
+        $full = $media->thumbnailUrl('large');
+    }
+?>
+        <li class="umd-gallery__item">
+<?php
+    $hasTitle = $showHeading && $title !== '';
+    $body     = ($showBody && ($b = $resource->displayDescription())) ? $b : '';
+    $hasBody  = $body !== '';
+    // Lightbox hooks ride on the card link; the href stays the item page as the
+    // no-JS fallback. .card--link::after makes the whole card clickable.
+    $linkAttrs = ['class' => 'card--link'];
+    if ($full) {
+        $linkAttrs['data-umd-full']    = $full;
+        $linkAttrs['data-umd-caption'] = $title;
+    }
+?>
+            <div class="umd-lib card card--standard c-content-primary">
+<?php if ($showThumbnail): ?>
+                <div class="card--image"><?php
+    // With no title to carry the link, the image itself becomes the link so the
+    // cell stays navigable (the pre-card behaviour for heading-less galleries).
+    echo $hasTitle
+        ? $this->thumbnail($resource, 'medium')
+        : $resource->linkRaw($this->thumbnail($resource, 'medium'), null, $linkAttrs);
+?></div>
+<?php endif; ?>
+<?php if ($hasTitle || $hasBody): ?>
+                <div class="card--content s-box-medium-v">
+<?php if ($hasTitle): ?>
+                    <div class="card--title">
+                        <p class="card--headline t-title-medium"><?php
+                            echo $resource->linkRaw($escape($title), null, $linkAttrs); ?></p>
+                    </div>
+<?php endif; ?>
+<?php if ($hasBody): ?>
+                    <div class="card--details">
+                        <div class="card--text t-body-small c-content-secondary"><p><?php echo $escape($body); ?></p></div>
+                    </div>
+<?php endif; ?>
+                </div>
+<?php endif; ?>
+            </div>
+        </li>
+<?php endforeach; ?>
+    </ul>
+<?php if ($linkText): ?>
+    <?php echo $this->hyperlink($linkText, $this->url('site/resource',
+        ['controller' => $resourceType, 'action' => 'browse'],
+        ['query' => $query], true)); ?>
+<?php endif; ?>
+</div>

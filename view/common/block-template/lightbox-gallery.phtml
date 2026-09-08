@@ -1,0 +1,19 @@
+<?php
+/**
+ * A gallery whose thumbnails open in an overlay instead of navigating away.
+ *
+ * `fancybox` is the single most widely shared component in the legacy
+ * exhibits, so this is the one treatment the survey said was missing.
+ *
+ * It is a THEME template, not a module: it adds no block type. Core's
+ * `lightboxGallery` is a resource-page block (item pages only) and cannot be
+ * used here. This renders the same markup as the plain gallery and enhances it
+ * with the theme's own script, so with JS off it degrades to a grid of links
+ * to the item pages.
+ */
+echo $this->partial('common/block-template/gallery-base.phtml', [
+    'resources' => $this->resources, 'components' => $this->components,
+    'resourceType' => $this->resourceType, 'heading' => $this->heading,
+    'linkText' => $this->linkText, 'query' => $this->query,
+    'layout' => 'grid', 'lightbox' => true,
+]);

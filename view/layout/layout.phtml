@@ -1,0 +1,163 @@
+<?php
+/**
+ * Site chrome for every page.
+ *
+ * Helper usage follows the shipped themes (centerrow, foundation) rather than
+ * being invented: $site comes in as a view variable, htmlElement() emits the
+ * html and body tags with Omeka's own attributes, themeSettingAssetUrl()
+ * resolves Asset-type theme settings, and trigger('view.layout') is the event
+ * modules hook to inject into the layout. Omitting that last one silently
+ * breaks modules rather than erroring.
+ *
+ * Two things here are not decoration:
+ *
+ *  - the lifecycle notice, which the service model requires on exhibits that
+ *    are live but no longer maintained;
+ *  - the Matomo snippet, which is the evidence a renewal depends on and which
+ *    cannot be backfilled if it is missing.
+ *
+ * Both are driven by theme settings, so they are set per exhibit by whoever
+ * administers the site rather than remembered by a curator.
+ */
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+
+$siteTitle = $site->title();
+
+$this->htmlElement('html')->setAttribute('lang', $this->lang());
+$this->headMeta()->setCharset('utf-8');
+$this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1');
+$this->headTitle($siteTitle)->setSeparator(' · ');
+$this->headTitle()->append($this->setting('installation_title', 'Omeka S'));
+
+$this->headLink()->prependStylesheet($this->assetUrl('css/iconfonts.css', 'Omeka'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/design-system.css'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/components.css'));
+$this->headLink()->appendStylesheet($this->assetUrl('css/theme.css'));
+
+// Per-exhibit stylesheet (Tier 3): an optional, slug-scoped layer over the base
+// theme, present only for exhibits that need bespoke surface styling. Authored
+// entirely under [data-exhibit="<slug>"] and code-reviewed; loaded last so it
+// wins. Inert until asset/css/exhibits/<slug>.css exists, so no exhibit pays for
+// a file it does not have. __DIR__ resolves to this template's own directory
+// (themes/umd-exhibits/view/layout), so its grandparent is the theme root.
+$exhibitSlug = $site->slug();
+if (preg_match('/^[a-z0-9-]+$/', $exhibitSlug)
+    && is_file(dirname(__DIR__, 2) . '/asset/css/exhibits/' . $exhibitSlug . '.css')
+) {
+    $this->headLink()->appendStylesheet($this->assetUrl('css/exhibits/' . $exhibitSlug . '.css'));
+}
+
+$this->headScript()->prependFile($this->assetUrl('js/global.js', 'Omeka'));
+$this->headScript()->prependFile($this->assetUrl('vendor/jquery/jquery.min.js', 'Omeka'));
+$this->headScript()->appendFile($this->assetUrl('js/site-nav.js'), 'text/javascript', ['defer' => 'defer']);
+// Mark the document JS-capable BEFORE first paint so the nav's progressive
+// enhancement (collapsed submenus, mobile toggle) is styled from the start and
+// no-JS visitors keep an expanded, in-flow, fully reachable nav. prependScript
+// puts this synchronous line ahead of the deferred/external scripts.
+$this->headScript()->prependScript("document.documentElement.className += ' umd-js';");
+$this->jsTranslate();
+
+$lifecycle     = $this->themeSetting('lifecycle_state') ?: 'live';
+$lifecycleNote = $this->themeSetting('lifecycle_note');
+$matomoId      = $this->themeSetting('matomo_site_id');
+$accent        = $this->themeSetting('accent') ?: 'red';
+$navDepth      = (int) $this->themeSetting('nav_depth');
+
+$this->htmlElement('html')->appendAttribute('data-accent', $accent);
+// The per-exhibit scope handle. Tier 1 tokens and any Tier 3 stylesheet key off
+// this, so an exhibit's surface styling cannot leak to other exhibits.
+$this->htmlElement('html')->appendAttribute('data-exhibit', $site->slug());
+
+$this->trigger('view.layout');
+$userBar = $this->userBar();
+?>
+<?php echo $this->doctype(); ?>
+<?php echo $this->htmlElement('html'); ?>
+    <head>
+        <?php echo $this->headMeta(); ?>
+        <?php echo $this->headTitle(); ?>
+        <?php echo $this->headLink(); ?>
+        <?php echo $this->headStyle(); ?>
+        <?php echo $this->headScript(); ?>
+    </head>
+
+    <?php echo $this->htmlElement('body'); ?>
+        <a id="skipnav" class="umd-skip" href="#content"><?php echo $translate('Skip to main content'); ?></a>
+        <?php echo $userBar; ?>
+
+<?php if ($lifecycle !== 'live'): ?>
+        <div class="umd-lifecycle umd-lifecycle--<?php echo $escape($lifecycle); ?>" role="status">
+<?php if ($lifecycleNote): ?>
+            <?php echo $lifecycleNote; ?>
+<?php elseif ($lifecycle === 'archived'): ?>
+            <p><?php echo $translate('This exhibit is archived. It remains available for reference but is no longer being updated.'); ?></p>
+<?php else: ?>
+            <p><?php echo $translate('This exhibit is scheduled for removal.'); ?></p>
+<?php endif; ?>
+        </div>
+<?php endif; ?>
+
+        <?php
+        /*
+         * The required university banner.
+         *
+         * This is not our markup and not our CSS. umd-libraries-umdheader in the
+         * design system is a single script tag pointing at a bundle the
+         * university hosts and updates, and lib.umd.edu embeds it with exactly
+         * these parameters. An earlier draft of this theme hand-rolled a red
+         * strip to look like it, which is how the header came to diverge: it was
+         * an eyeball copy of something centrally maintained.
+         *
+         * All feature toggles are off, matching lib.umd.edu. An exhibit has no
+         * use for the university's search, events, news, schools, admissions or
+         * giving links, and turning them on would put the university's
+         * navigation above the exhibit's own.
+         */
+        ?>
+        <script src="https://umd-header.umd.edu/build/bundle.js?search_domain=&support_url=&wrapper=&sticky=0&search=0&events=0&news=0&schools=0&admissions=0&support=0"></script>
+
+        <header class="umd-header">
+            <div class="umd-header__inner">
+                <a class="umd-header__logo" href="https://www.lib.umd.edu/"
+                   aria-label="<?php echo $escape($translate('University of Maryland Libraries — Home')); ?>">
+                    <img class="umd-header__logo-light" width="250" height="75"
+                         src="<?php echo $escape($this->assetUrl('img/libraries-logo.svg')); ?>"
+                         alt="<?php echo $escape($translate('University of Maryland Libraries')); ?>">
+                    <img class="umd-header__logo-dark" width="250" height="75" alt="" aria-hidden="true"
+                         src="<?php echo $escape($this->assetUrl('img/libraries-logo-dark.svg')); ?>">
+                </a>
+                <p class="umd-header__exhibit">
+                    <a href="<?php echo $escape($site->url()); ?>"><?php echo $escape($siteTitle); ?></a>
+                </p>
+            </div>
+        </header>
+
+        <?php echo $this->partial('common/site-nav', ['site' => $site, 'navDepth' => $navDepth]); ?>
+
+        <main id="content" class="umd-main">
+            <?php echo $this->content; ?>
+        </main>
+
+        <?php echo $this->partial('common/footer.phtml'); ?>
+
+<?php if ($matomoId): ?>
+        <script>
+          var _paq = window._paq = window._paq || [];
+          _paq.push(['trackPageView']);
+          _paq.push(['enableLinkTracking']);
+          (function () {
+            var u = 'https://umd.matomo.cloud/';
+            _paq.push(['setTrackerUrl', u + 'matomo.php']);
+            _paq.push(['setSiteId', '<?php echo $this->escapeJs($matomoId); ?>']);
+            var d = document,
+                g = d.createElement('script'),
+                s = d.getElementsByTagName('script')[0];
+            g.async = true;
+            g.src = 'https://cdn.matomo.cloud/umd.matomo.cloud/matomo.js';
+            s.parentNode.insertBefore(g, s);
+          })();
+        </script>
+<?php endif; ?>
+    </body>
+</html>

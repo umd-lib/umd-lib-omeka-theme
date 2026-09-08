@@ -1,0 +1,21 @@
+<?php
+/**
+ * A standing note about difficult content.
+ *
+ * A named treatment rather than "a callout with the right words in it", for
+ * three reasons a curator should not have to know about:
+ *
+ *   - it carries role="note", so assistive technology announces it as an aside
+ *     rather than as body prose;
+ *   - the label is fixed, so the notice reads the same across every exhibit
+ *     instead of drifting between "Content warning", "Please note" and "NB";
+ *   - it is findable. One selector locates every content notice on the
+ *     platform, which matters the first time someone asks which exhibits carry
+ *     one.
+ *
+ * The curator supplies the body; the semantics and the label come for free.
+ */
+echo $this->partial('common/block-template/prose-base.phtml', [
+    'block'   => $block,
+    'variant' => 'content-notice',
+]);
