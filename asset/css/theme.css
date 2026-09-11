@@ -396,15 +396,15 @@ table { width: 100%; border-collapse: collapse; }
   gap: var(--space-md);
   align-items: baseline;
   font-size: 0.875rem;
-  justify-content: center;
+  justify-content: space-between;
   max-width: var(--umd-page);
   margin-inline: auto;
 }
-.umd-footer__content > .umd-footer__section:nth-child(1) {
-  flex: 0 0 66.666%;
+.umd-footer__content > .umd-footer__section:first-child {
+  flex: 2;
 }
-.umd-footer__content > .umd-footer__section:nth-child(2) {
-  flex: 0 0 33.333%;
+.umd-footer__content > .umd-footer__section:last-child {
+  flex: 1;
 }
 /* Literal white: the global `h1..h6 { color: var(--black) }` rule would
  * otherwise paint the heading near-black on this fixed-dark surface (which is
