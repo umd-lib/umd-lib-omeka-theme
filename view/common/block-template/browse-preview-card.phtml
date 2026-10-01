@@ -54,7 +54,15 @@ $cardOptions = [
         $targetUrl = $resource->url();
     }
 
-    $thumbnail = $showThumbnail ? $this->thumbnail($resource, 'medium') : '';
+    $thumbnailAttributes = [];
+    $description = $resource->value('dcterms:description');
+
+    if ($description) {
+        $thumbnailAttributes['alt'] = $description->value();
+        $thumbnailAttributes['title'] = $description->value();
+    }
+
+    $thumbnail = $showThumbnail ? $this->thumbnail($resource, 'medium', $thumbnailAttributes) : '';
     ?>
 
     <li class="resource item">
